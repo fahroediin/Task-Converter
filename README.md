@@ -2,9 +2,7 @@
 
 Ini adalah sebuah web tool sederhana yang dibuat dengan HTML, CSS, dan JavaScript murni untuk mengubah log tugas harian dari format teks biasa menjadi tabel yang terstruktur. Alat ini dirancang untuk mempercepat proses pelaporan dan pemantauan tugas dengan mengotomatiskan entri data ke dalam spreadsheet seperti Google Sheets.
 
-[![Tampilan Aplikasi](https://i.ibb.co/6P6X1wW/task-converter-screenshot.png)](https://task-converter.vercel.app/)
-
-**[Lihat Live Demo](https://task-converter.vercel.app/)**
+[![Tampilan Aplikasi](https://github.com/fahroediin/Task-Converter/blob/main/Screenshot.png)](https://task-converter.vercel.app/)
 
 ## Fitur Utama
 
