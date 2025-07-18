@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f7f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    #form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    label {
+      font-weight: bold;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .button-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #submit-button {
+      background-color: #3498db;
+      color: white;
+    }
+    #submit-button:hover {
+      background-color: #2980b9;
+    }
+    #submit-button:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+    #cancel-button {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+    #cancel-button:hover {
+      background-color: #c9c9c9;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px;
+      border-radius: 4px;
+      display: none; /* Hidden by default */
+    }
+    #status.success {
+      background-color: #eafaf1;
+      color: #16a085;
+    }
+    #status.error {
+      background-color: #fbeeee;
+      color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div id="form">
+    <div class="input-group">
+      <label for="log-text">Paste Task Log</label>
+      <textarea id="log-text" placeholder="Tempel teks laporan harian di sini..."></textarea>
+    </div>
+    <div class="input-group">
+      <label for="target-cell">Target Cell (e.g., A1)</label>
+      <input type="text" id="target-cell" value="A1">
+    </div>
+    <div class="button-bar">
+      <button id="cancel-button">Cancel</button>
+      <button id="submit-button">Convert and Insert</button>
+    </div>
+  </div>
+  <div id="status"></div>
+
+  <script>
+    const submitButton = document.getElementById('submit-button');
+    const cancelButton = document.getElementById('cancel-button');
+    const statusDiv = document.getElementById('status');
+
+    // Handle form submission
+    submitButton.addEventListener('click', () => {
+      setLoadingState(true);
+      const data = {
+        logText: document.getElementById('log-text').value,
+        targetCell: document.getElementById('target-cell').value.toUpperCase()
+      };
+      google.script.run
+        .withSuccessHandler(handleSuccess)
+        .withFailureHandler(handleFailure)
+        .processAndInsertData(data);
+    });
+
+    // Handle cancel button click
+    cancelButton.addEventListener('click', () => {
+      google.script.host.close();
+    });
+
+    function handleSuccess(message) {
+      showStatus(message, false);
+      // Close dialog automatically on success after a short delay
+      setTimeout(() => {
+        google.script.host.close();
+      }, 3000);
+    }
+
+    function handleFailure(error) {
+      showStatus(error.message, true);
+      setLoadingState(false);
+    }
+    
+    function setLoadingState(isLoading) {
+      submitButton.disabled = isLoading;
+      submitButton.textContent = isLoading ? 'Processing...' : 'Convert and Insert';
+    }
+
+    function showStatus(message, isError) {
+      statusDiv.textContent = message;
+      statusDiv.className = isError ? 'error' : 'success';
+      statusDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
