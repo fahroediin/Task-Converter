@@ -21,13 +21,11 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        h1 {
-            text-align: center;
+        h1, h2 {
             color: #2c3e50;
         }
         textarea {
             width: 100%;
-            height: 250px;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -35,7 +33,10 @@
             font-size: 14px;
             box-sizing: border-box;
         }
-        button {
+        #inputText {
+            height: 250px;
+        }
+        button#convertBtn {
             display: block;
             width: 100%;
             padding: 12px;
@@ -49,26 +50,8 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        button:hover {
+        button#convertBtn:hover {
             background-color: #2980b9;
-        }
-        #output-area {
-            position: relative;
-        }
-        #copy-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #16a085;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        #copy-button:hover {
-            background-color: #1abc9c;
         }
         .instructions {
             background-color: #ecf0f1;
@@ -76,6 +59,74 @@
             border-left: 4px solid #3498db;
             margin-bottom: 20px;
             border-radius: 4px;
+        }
+
+        /* --- STYLING BARU UNTUK PREVIEW DAN TOMBOL COPY --- */
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+        .output-header h2 {
+            margin: 0;
+        }
+        .copy-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #copy-feedback {
+            color: #16a085;
+            font-size: 14px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #copy-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #copy-button:hover {
+            background-color: #e0e0e0;
+        }
+        #copy-button svg {
+            width: 20px;
+            height: 20px;
+            fill: #555;
+        }
+        #outputPreview {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 300px;
+            overflow: auto; /* Agar bisa scroll jika tabelnya panjang */
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        #outputPreview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        #outputPreview th, #outputPreview td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        #outputPreview th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        #outputPreview tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
     </style>
 </head>
@@ -87,49 +138,65 @@
         <div class="instructions">
             <strong>Cara Penggunaan:</strong>
             <ol>
-                <li>Tempel (paste) laporan harian Anda (format dengan tanggal dan nama PIC) ke dalam "Input Text".</li>
-                <li>Klik tombol "Convert to Google Sheets Format".</li>
-                <li>Kolom "Task" akan diringkas, dan "Description" berisi detail lengkap.</li>
-                <li>Gunakan tombol "Copy" untuk menyalin hasil dan tempel ke Google Sheets.</li>
+                <li>Tempel laporan harian Anda ke dalam "Input Text".</li>
+                <li>Klik "Convert". Anda akan melihat hasil dalam format tabel di bawah.</li>
+                <li>Klik ikon <strong>Copy</strong> (di sebelah kanan judul "Preview") untuk menyalin data ke clipboard.</li>
+                <li>Tempel ke Google Sheets.</li>
             </ol>
         </div>
 
         <h2>Input Text</h2>
         <textarea id="inputText" placeholder="Tempel teks laporan harian di sini..."></textarea>
 
-        <button id="convertBtn">Convert to Google Sheets Format</button>
-
-        <h2>Output for Google Sheets</h2>
-        <div id="output-area">
-            <textarea id="outputText" readonly></textarea>
-            <button id="copy-button">Copy</button>
+        <button id="convertBtn">Convert</button>
+        
+        <!-- Area Preview yang Diperbarui -->
+        <div class="output-header">
+            <h2>Preview</h2>
+            <div class="copy-container">
+                <span id="copy-feedback">Copied!</span>
+                <button id="copy-button" title="Copy for Google Sheets">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+            </div>
         </div>
+        <div id="outputPreview">
+            <!-- Tabel HTML akan disuntikkan di sini oleh JavaScript -->
+        </div>
+
     </div>
 
     <script>
-        const monthMap = {
-            'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06',
-            'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12'
-        };
+        const monthMap = { 'januari':'01', 'februari':'02', 'maret':'03', 'april':'04', 'mei':'05', 'juni':'06', 'juli':'07', 'agustus':'08', 'september':'09', 'oktober':'10', 'november':'11', 'desember':'12' };
+        let tsvForCopy = '';
 
         document.getElementById('convertBtn').addEventListener('click', () => {
             const inputText = document.getElementById('inputText').value;
+            const outputPreview = document.getElementById('outputPreview');
+
             if (!inputText.trim()) {
-                document.getElementById('outputText').value = "Input text tidak boleh kosong.";
+                outputPreview.innerHTML = '<p style="color: #888;">Input text tidak boleh kosong.</p>';
+                tsvForCopy = '';
                 return;
             }
-            const output = processText(inputText);
-            document.getElementById('outputText').value = output;
+            const { html, tsv } = processText(inputText);
+            
+            // Suntikkan tabel HTML ke dalam div preview
+            outputPreview.innerHTML = html;
+            // Simpan data TSV untuk disalin
+            tsvForCopy = tsv;
         });
 
         document.getElementById('copy-button').addEventListener('click', () => {
-            const outputText = document.getElementById('outputText');
-            outputText.select();
-            navigator.clipboard.writeText(outputText.value).then(() => {
-                const copyBtn = document.getElementById('copy-button');
-                copyBtn.textContent = 'Copied!';
+            if (!tsvForCopy) {
+                alert('Tidak ada data untuk disalin. Silakan klik "Convert" terlebih dahulu.');
+                return;
+            }
+            navigator.clipboard.writeText(tsvForCopy).then(() => {
+                const feedback = document.getElementById('copy-feedback');
+                feedback.style.opacity = '1';
                 setTimeout(() => {
-                    copyBtn.textContent = 'Copy';
+                    feedback.style.opacity = '0';
                 }, 2000);
             }).catch(err => {
                 alert('Gagal menyalin teks: ', err);
@@ -139,29 +206,16 @@
         function summarizeTask(fullDescription) {
             const delimiters = ['(', ',', ' untuk ', ' dengan detail', '(detail'];
             let bestIndex = -1;
-
             for (const delimiter of delimiters) {
                 const index = fullDescription.indexOf(delimiter);
-                if (index !== -1) {
-                    if (bestIndex === -1 || index < bestIndex) {
-                        bestIndex = index;
-                    }
-                }
+                if (index !== -1 && (bestIndex === -1 || index < bestIndex)) { bestIndex = index; }
             }
-
-            if (bestIndex !== -1) {
-                return fullDescription.substring(0, bestIndex).trim();
-            }
-
-            return fullDescription;
+            return bestIndex !== -1 ? fullDescription.substring(0, bestIndex).trim() : fullDescription;
         }
 
         function parseDate(dateString) {
             const parts = dateString.split('-').map(p => p.trim());
-            const day = parts[0].padStart(2, '0');
-            const month = monthMap[parts[1].toLowerCase()];
-            const year = parts[2];
-            return `${year}-${month}-${day}`;
+            return `${parts[2]}-${monthMap[parts[1].toLowerCase()]}-${parts[0].padStart(2, '0')}`;
         }
         
         function formatDate(isoDate) {
@@ -172,69 +226,58 @@
         }
 
         function processText(text) {
+            // Logika parsing data (tetap sama)
             const lines = text.split('\n');
             const dailyTasks = {};
-
-            let currentDate = null;
-            let currentPIC = null;
-
+            let currentDate = null, currentPIC = null;
             for (const line of lines) {
                 const trimmedLine = line.trim();
                 if (!trimmedLine || trimmedLine.startsWith('=')) continue;
-
                 const dateMatch = trimmedLine.match(/^(\d{1,2})\s*-\s*([a-zA-Z]+)\s*-\s*(\d{4})$/);
                 if (dateMatch) {
                     currentDate = parseDate(trimmedLine);
                     if (!dailyTasks[currentDate]) dailyTasks[currentDate] = {};
-                    currentPIC = null;
-                    continue;
+                    currentPIC = null; continue;
                 }
-
                 const picMatch = trimmedLine.match(/^\d+\.\s*(.+)$/);
                 if (picMatch) {
                     currentPIC = picMatch[1].trim();
-                    if (currentDate && !dailyTasks[currentDate][currentPIC]) {
-                        dailyTasks[currentDate][currentPIC] = [];
-                    }
+                    if (currentDate && !dailyTasks[currentDate][currentPIC]) dailyTasks[currentDate][currentPIC] = [];
                     continue;
                 }
-
                 const taskMatch = trimmedLine.match(/^-\s*(.+)$/);
-                if (taskMatch && currentDate && currentPIC) {
-                    const task = taskMatch[1].trim();
-                    dailyTasks[currentDate][currentPIC].push(task);
-                }
+                if (taskMatch && currentDate && currentPIC) { dailyTasks[currentDate][currentPIC].push(taskMatch[1].trim()); }
             }
             
             const allTasks = new Map();
             const sortedDates = Object.keys(dailyTasks).sort();
-            
-            for(const date of sortedDates) {
-                const dayData = dailyTasks[date];
-                for (const pic in dayData) {
-                    for (const task of dayData[pic]) {
+            for (const date of sortedDates) {
+                for (const pic in dailyTasks[date]) {
+                    for (const task of dailyTasks[date][pic]) {
                         const taskKey = `${pic}:${task}`;
-                        if (!allTasks.has(taskKey)) {
-                            allTasks.set(taskKey, { startDate: date, lastSeenDate: date });
-                        } else {
-                            allTasks.get(taskKey).lastSeenDate = date;
-                        }
+                        if (!allTasks.has(taskKey)) { allTasks.set(taskKey, { startDate: date, lastSeenDate: date }); }
+                        else { allTasks.get(taskKey).lastSeenDate = date; }
                     }
                 }
             }
 
-            const outputRows = [];
+            // --- PEMBUATAN DUA OUTPUT (HTML & TSV) ---
+            const tsvRows = [];
+            let htmlTable = '<table><thead><tr>';
             const header = ['Task', 'Description', 'PIC', 'Status', 'Start Date', 'End Date'];
-            outputRows.push(header.join('\t'));
+            
+            header.forEach(h => htmlTable += `<th>${h}</th>`);
+            htmlTable += '</tr></thead><tbody>';
+            
+            tsvRows.push(header.join('\t'));
 
             const lastDate = sortedDates[sortedDates.length - 1];
             
-            for(const [taskKey, dates] of allTasks.entries()) {
+            for (const [taskKey, dates] of allTasks.entries()) {
                 const [pic, fullDescription] = taskKey.split(':', 2);
                 const { startDate, lastSeenDate } = dates;
                 
                 const shortTask = summarizeTask(fullDescription);
-
                 let status = 'In Progress';
                 let endDate = '-';
 
@@ -244,18 +287,31 @@
                     endDate = sortedDates[lastSeenDateIndex + 1];
                 }
 
-                const row = [
-                    shortTask,
-                    fullDescription,
-                    pic,
-                    status,
-                    formatDate(startDate),
-                    formatDate(endDate)
-                ];
-                outputRows.push(row.join('\t'));
+                const formattedStartDate = formatDate(startDate);
+                const formattedEndDate = formatDate(endDate);
+                
+                const rowData = [shortTask, fullDescription, pic, status, formattedStartDate, formattedEndDate];
+                
+                // Buat baris untuk TSV (copy)
+                tsvRows.push(rowData.join('\t'));
+
+                // Buat baris untuk tabel HTML (preview)
+                htmlTable += '<tr>';
+                rowData.forEach(cell => htmlTable += `<td>${cell.replace(/</g, "<").replace(/>/g, ">")}</td>`); // Escape HTML
+                htmlTable += '</tr>';
             }
 
-            return outputRows.join('\n');
+            htmlTable += '</tbody></table>';
+
+            // Jika tidak ada task, tampilkan pesan
+            if (allTasks.size === 0) {
+                htmlTable = '<p style="color: #888;">Tidak ada data tugas yang ditemukan dalam format yang benar.</p>';
+            }
+
+            return {
+                html: htmlTable,
+                tsv: tsvRows.join('\n')
+            };
         }
     </script>
 </body>
