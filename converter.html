@@ -11,7 +11,8 @@
             background-color: #f4f7f9;
             color: #333;
             margin: 0;
-            padding: 20px;
+            /* Menambahkan padding-bottom untuk memberi ruang bagi footer */
+            padding: 20px 20px 60px 20px; 
         }
         .container {
             max-width: 1200px;
@@ -60,8 +61,6 @@
             margin-bottom: 20px;
             border-radius: 4px;
         }
-
-        /* --- STYLING BARU UNTUK PREVIEW DAN TOMBOL COPY --- */
         .output-header {
             display: flex;
             justify-content: space-between;
@@ -106,7 +105,7 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             height: 300px;
-            overflow: auto; /* Agar bisa scroll jika tabelnya panjang */
+            overflow: auto;
             padding: 15px;
             background-color: #f8f9fa;
         }
@@ -127,6 +126,20 @@
         }
         #outputPreview tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+
+        /* --- CSS BARU UNTUK STICKY FOOTER --- */
+        .sticky-footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #2c3e50; /* Warna yang konsisten dengan tema */
+            color: white;
+            text-align: center;
+            padding: 12px 0;
+            font-size: 14px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Efek bayangan halus */
         }
     </style>
 </head>
@@ -150,7 +163,6 @@
 
         <button id="convertBtn">Convert</button>
         
-        <!-- Area Preview yang Diperbarui -->
         <div class="output-header">
             <h2>Preview</h2>
             <div class="copy-container">
@@ -166,7 +178,14 @@
 
     </div>
 
+    <!-- ELEMEN FOOTER BARU DITAMBAHKAN DI SINI -->
+    <footer class="sticky-footer">
+        Dibuat oleh Fahrudin
+    </footer>
+
     <script>
+        // --- SELURUH KODE JAVASCRIPT TETAP SAMA ---
+        // (Tidak perlu diubah)
         const monthMap = { 'januari':'01', 'februari':'02', 'maret':'03', 'april':'04', 'mei':'05', 'juni':'06', 'juli':'07', 'agustus':'08', 'september':'09', 'oktober':'10', 'november':'11', 'desember':'12' };
         let tsvForCopy = '';
 
@@ -181,9 +200,7 @@
             }
             const { html, tsv } = processText(inputText);
             
-            // Suntikkan tabel HTML ke dalam div preview
             outputPreview.innerHTML = html;
-            // Simpan data TSV untuk disalin
             tsvForCopy = tsv;
         });
 
@@ -226,7 +243,6 @@
         }
 
         function processText(text) {
-            // Logika parsing data (tetap sama)
             const lines = text.split('\n');
             const dailyTasks = {};
             let currentDate = null, currentPIC = null;
@@ -261,7 +277,6 @@
                 }
             }
 
-            // --- PEMBUATAN DUA OUTPUT (HTML & TSV) ---
             const tsvRows = [];
             let htmlTable = '<table><thead><tr>';
             const header = ['Task', 'Description', 'PIC', 'Status', 'Start Date', 'End Date'];
@@ -292,18 +307,15 @@
                 
                 const rowData = [shortTask, fullDescription, pic, status, formattedStartDate, formattedEndDate];
                 
-                // Buat baris untuk TSV (copy)
                 tsvRows.push(rowData.join('\t'));
 
-                // Buat baris untuk tabel HTML (preview)
                 htmlTable += '<tr>';
-                rowData.forEach(cell => htmlTable += `<td>${cell.replace(/</g, "<").replace(/>/g, ">")}</td>`); // Escape HTML
+                rowData.forEach(cell => htmlTable += `<td>${cell.replace(/</g, "<").replace(/>/g, ">")}</td>`);
                 htmlTable += '</tr>';
             }
 
             htmlTable += '</tbody></table>';
 
-            // Jika tidak ada task, tampilkan pesan
             if (allTasks.size === 0) {
                 htmlTable = '<p style="color: #888;">Tidak ada data tugas yang ditemukan dalam format yang benar.</p>';
             }
