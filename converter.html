@@ -87,7 +87,7 @@
         <div class="instructions">
             <strong>Cara Penggunaan:</strong>
             <ol>
-                <li>Tempel (paste) laporan harian Anda ke dalam "Input Text".</li>
+                <li>Tempel (paste) laporan harian Anda (format dengan tanggal dan nama PIC) ke dalam "Input Text".</li>
                 <li>Klik tombol "Convert to Google Sheets Format".</li>
                 <li>Kolom "Task" akan diringkas, dan "Description" berisi detail lengkap.</li>
                 <li>Gunakan tombol "Copy" untuk menyalin hasil dan tempel ke Google Sheets.</li>
@@ -136,12 +136,7 @@
             });
         });
         
-        /**
-         * NEW FUNCTION: Summarizes a long task description into a short task name.
-         * It looks for common delimiters that separate the main task from its details.
-         */
         function summarizeTask(fullDescription) {
-            // List of delimiters. The function will split the string at the first one it finds.
             const delimiters = ['(', ',', ' untuk ', ' dengan detail', '(detail'];
             let bestIndex = -1;
 
@@ -155,11 +150,9 @@
             }
 
             if (bestIndex !== -1) {
-                // Return the part of the string before the delimiter
                 return fullDescription.substring(0, bestIndex).trim();
             }
 
-            // If no delimiter is found, the task is likely already simple.
             return fullDescription;
         }
 
@@ -231,18 +224,15 @@
             }
 
             const outputRows = [];
-            // Header is now updated
             const header = ['Task', 'Description', 'PIC', 'Status', 'Start Date', 'End Date'];
             outputRows.push(header.join('\t'));
 
             const lastDate = sortedDates[sortedDates.length - 1];
             
             for(const [taskKey, dates] of allTasks.entries()) {
-                // MODIFIED: 'task' is now treated as the full description
                 const [pic, fullDescription] = taskKey.split(':', 2);
                 const { startDate, lastSeenDate } = dates;
                 
-                // NEW: Generate a short task name using our helper function
                 const shortTask = summarizeTask(fullDescription);
 
                 let status = 'In Progress';
@@ -254,7 +244,6 @@
                     endDate = sortedDates[lastSeenDateIndex + 1];
                 }
 
-                // MODIFIED: The row now contains both the short task and the full description
                 const row = [
                     shortTask,
                     fullDescription,
