@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Converter to Google Sheets Format</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #output-area {
+            position: relative;
+        }
+        #copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #16a085;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        #copy-button:hover {
+            background-color: #1abc9c;
+        }
+        .instructions {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Task Converter (Text to Google Sheets)</h1>
+
+        <div class="instructions">
+            <strong>Cara Penggunaan:</strong>
+            <ol>
+                <li>Tempel (paste) laporan harian Anda ke dalam "Input Text".</li>
+                <li>Klik tombol "Convert to Google Sheets Format".</li>
+                <li>Kolom "Task" akan diringkas, dan "Description" berisi detail lengkap.</li>
+                <li>Gunakan tombol "Copy" untuk menyalin hasil dan tempel ke Google Sheets.</li>
+            </ol>
+        </div>
+
+        <h2>Input Text</h2>
+        <textarea id="inputText" placeholder="Tempel teks laporan harian di sini..."></textarea>
+
+        <button id="convertBtn">Convert to Google Sheets Format</button>
+
+        <h2>Output for Google Sheets</h2>
+        <div id="output-area">
+            <textarea id="outputText" readonly></textarea>
+            <button id="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <script>
+        const monthMap = {
+            'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06',
+            'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12'
+        };
+
+        document.getElementById('convertBtn').addEventListener('click', () => {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText.trim()) {
+                document.getElementById('outputText').value = "Input text tidak boleh kosong.";
+                return;
+            }
+            const output = processText(inputText);
+            document.getElementById('outputText').value = output;
+        });
+
+        document.getElementById('copy-button').addEventListener('click', () => {
+            const outputText = document.getElementById('outputText');
+            outputText.select();
+            navigator.clipboard.writeText(outputText.value).then(() => {
+                const copyBtn = document.getElementById('copy-button');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                alert('Gagal menyalin teks: ', err);
+            });
+        });
+        
+        /**
+         * NEW FUNCTION: Summarizes a long task description into a short task name.
+         * It looks for common delimiters that separate the main task from its details.
+         */
+        function summarizeTask(fullDescription) {
+            // List of delimiters. The function will split the string at the first one it finds.
+            const delimiters = ['(', ',', ' untuk ', ' dengan detail', '(detail'];
+            let bestIndex = -1;
+
+            for (const delimiter of delimiters) {
+                const index = fullDescription.indexOf(delimiter);
+                if (index !== -1) {
+                    if (bestIndex === -1 || index < bestIndex) {
+                        bestIndex = index;
+                    }
+                }
+            }
+
+            if (bestIndex !== -1) {
+                // Return the part of the string before the delimiter
+                return fullDescription.substring(0, bestIndex).trim();
+            }
+
+            // If no delimiter is found, the task is likely already simple.
+            return fullDescription;
+        }
+
+        function parseDate(dateString) {
+            const parts = dateString.split('-').map(p => p.trim());
+            const day = parts[0].padStart(2, '0');
+            const month = monthMap[parts[1].toLowerCase()];
+            const year = parts[2];
+            return `${year}-${month}-${day}`;
+        }
+        
+        function formatDate(isoDate) {
+            if (!isoDate || isoDate === '-') return '-';
+            const [year, month, day] = isoDate.split('-');
+            const monthName = Object.keys(monthMap).find(key => monthMap[key] === month);
+            return `${day} ${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
+        }
+
+        function processText(text) {
+            const lines = text.split('\n');
+            const dailyTasks = {};
+
+            let currentDate = null;
+            let currentPIC = null;
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (!trimmedLine || trimmedLine.startsWith('=')) continue;
+
+                const dateMatch = trimmedLine.match(/^(\d{1,2})\s*-\s*([a-zA-Z]+)\s*-\s*(\d{4})$/);
+                if (dateMatch) {
+                    currentDate = parseDate(trimmedLine);
+                    if (!dailyTasks[currentDate]) dailyTasks[currentDate] = {};
+                    currentPIC = null;
+                    continue;
+                }
+
+                const picMatch = trimmedLine.match(/^\d+\.\s*(.+)$/);
+                if (picMatch) {
+                    currentPIC = picMatch[1].trim();
+                    if (currentDate && !dailyTasks[currentDate][currentPIC]) {
+                        dailyTasks[currentDate][currentPIC] = [];
+                    }
+                    continue;
+                }
+
+                const taskMatch = trimmedLine.match(/^-\s*(.+)$/);
+                if (taskMatch && currentDate && currentPIC) {
+                    const task = taskMatch[1].trim();
+                    dailyTasks[currentDate][currentPIC].push(task);
+                }
+            }
+            
+            const allTasks = new Map();
+            const sortedDates = Object.keys(dailyTasks).sort();
+            
+            for(const date of sortedDates) {
+                const dayData = dailyTasks[date];
+                for (const pic in dayData) {
+                    for (const task of dayData[pic]) {
+                        const taskKey = `${pic}:${task}`;
+                        if (!allTasks.has(taskKey)) {
+                            allTasks.set(taskKey, { startDate: date, lastSeenDate: date });
+                        } else {
+                            allTasks.get(taskKey).lastSeenDate = date;
+                        }
+                    }
+                }
+            }
+
+            const outputRows = [];
+            // Header is now updated
+            const header = ['Task', 'Description', 'PIC', 'Status', 'Start Date', 'End Date'];
+            outputRows.push(header.join('\t'));
+
+            const lastDate = sortedDates[sortedDates.length - 1];
+            
+            for(const [taskKey, dates] of allTasks.entries()) {
+                // MODIFIED: 'task' is now treated as the full description
+                const [pic, fullDescription] = taskKey.split(':', 2);
+                const { startDate, lastSeenDate } = dates;
+                
+                // NEW: Generate a short task name using our helper function
+                const shortTask = summarizeTask(fullDescription);
+
+                let status = 'In Progress';
+                let endDate = '-';
+
+                if (lastSeenDate < lastDate) {
+                    status = 'Done';
+                    const lastSeenDateIndex = sortedDates.indexOf(lastSeenDate);
+                    endDate = sortedDates[lastSeenDateIndex + 1];
+                }
+
+                // MODIFIED: The row now contains both the short task and the full description
+                const row = [
+                    shortTask,
+                    fullDescription,
+                    pic,
+                    status,
+                    formatDate(startDate),
+                    formatDate(endDate)
+                ];
+                outputRows.push(row.join('\t'));
+            }
+
+            return outputRows.join('\n');
+        }
+    </script>
+</body>
+</html>
