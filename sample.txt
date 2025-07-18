@@ -1,0 +1,68 @@
+
+17 - Juli - 2025
+
+1. Stella
+- Validasi tiap field currency/number tidak boleh minus (-)
+- Validasi semua date/time di Application LKN form tidak boleh mundur ke belakang
+- Ubah sub menu tidak perlu ada "Application LKN"
+- Create fungsi add count di SP3KCounter
+- Create fungsi generate dokumen SP3K, sample template/format dokumen ada di LOS KP3 v3 hal. terakhir
+
+2. Sandi
+- Refactor client side validation application order web
+- Pindahkan business logic di LOSCS ke LOSFunction dan cek di module lain, semisal cycle.
+
+3. Aditya
+- Buat screen "Verification Documents" mengecek data dari table ApplicationDocuments (buat indexnya di Bawah menu Application Order Web) 
+(detail :1. tampilkan berupa list document, tombol untuk menampilkan document (pop-up), Status Verifikasi dengan dropdown [Sesuai, Tidak Sesuai], Remarks (Catatan), tombol Submit (jika ada 1 dokumen dengan status verifikasi Tidak Sesuai, kembalikan ke state Entry Data, jika seluruh dokumen sesuai, lanjutkan ke Survey jika produk NeedSurvey, 2. Simpan ke ApplicationVerification)
+- CreatedBy dan ModifiedBy di ApplicationDocument dari channel Upload, assign sesuai dgn user yg login
+
+4. Jody
+- Validasi tiap field currency/number tidak boleh minus (-)
+- Validasi semua date/time di Application LKN form tidak boleh mundur ke belakang
+- Buat Form berdasarkan ApplicationLKNKPR, Jika applicant product IsKPR maka isi Form LKNKPR tersebut, jika product nya bukan IsKPR arahkan ke form ApplicationLKN
+untuk data document samakan isi ke ApplicationLKNData
+Income + OtherIncome = Total Income
+UtilityExpense + EducationExpense + BasicExpense + OtherExpense = TotalExpense
+- Buat form untuk ApplicationAppraisal, letakkan di sebelah kanan stepper Survey
+
+5. Pak IB
+- Pindahkan Business Logic yang ada di LOSHome ke LOSFunction
+
+6. Bu Fini
+- Buat dokumen flow proses masing-masing produk (Kredit Tanpa Agunan, Kredit Agunan, KUR Kecil, Mikro dan KPR)
+
+
+18 - Juli - 2025
+
+1. Stella
+- Create fungsi generate dokumen SP3K, sample template/format dokumen ada di LOS KP3 v3 hal. terakhir
+- Tambahkan/assign CreatedBy dan ModifiedBy di ApplicationAppraisal
+
+2. Sandi
+- Pindahkan business logic di LOSCS ke LOSFunction dan cek di module lain, semisal cycle.
+- Ubah Ketika submit application order (API) dari state survey ke state verification JIKA produk IsKPR (v1 dan v2)
+- Penyusaian dari free text ke ENUM untuk field Tenureat, validasi nya + unit testing keduanya
+
+3. Aditya
+- Buat screen "Verification Documents" mengecek data dari table ApplicationDocuments (buat indexnya di Bawah menu Application Order Web)
+(detail :1. tampilkan berupa list document, tombol untuk menampilkan document (pop-up), Status Verifikasi dengan dropdown [Sesuai, Tidak Sesuai], Remarks (Catatan), tombol Submit (jika ada 1 dokumen dengan status verifikasi Tidak Sesuai, kembalikan ke state Entry Data, jika seluruh dokumen sesuai, lanjutkan ke Survey jika produk NeedSurvey, 2. Simpan ke ApplicationVerification)
+- CreatedBy dan ModifiedBy di ApplicationDocument dari channel Upload, assign sesuai dgn user yg login
+
+4. Jody
+- Validasi tiap field currency/number tidak boleh minus (-)
+- Validasi semua date/time di Application LKN form tidak boleh mundur ke belakang
+- Buat Form berdasarkan ApplicationLKNKPR, Jika applicant product IsKPR maka isi Form LKNKPR tersebut, jika product nya bukan IsKPR arahkan ke form ApplicationLKN
+untuk data document samakan isi ke ApplicationLKNData
+Income + OtherIncome = Total Income
+UtilityExpense + EducationExpense + BasicExpense + OtherExpense = TotalExpense
+- Tambahkan/assign CreatedBy dan ModifiedBy di ApplicationAppraisal
+
+5. Bu Fini
+- Buat dokumen flow proses masing-masing produk (Kredit Tanpa Agunan, Kredit Agunan, KUR Kecil, Mikro dan KPR)
+
+6. Mas Piki
+- Create desain figma untuk screen verifikasi dokumen
+
+7. Pak IB
+- Create dokumen third-party

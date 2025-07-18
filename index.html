@@ -10,14 +10,12 @@
             line-height: 1.6;
             background-color: #f4f7f9;
             color: #333;
-            /* HAPUS PADDING DARI BODY */
             margin: 0;
             padding: 0; 
         }
         .container {
             background: #fff;
             padding: 25px 40px;
-            /* Tambahkan margin untuk memberi jarak dari tepi layar dan footer */
             margin: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -61,15 +59,17 @@
             margin-bottom: 20px;
             border-radius: 4px;
         }
-        .output-header {
+        .area-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 30px;
             margin-bottom: 10px;
         }
-        .output-header h2 {
+        .area-header h2 {
             margin: 0;
+        }
+        .output-header {
+            margin-top: 30px;
         }
         .copy-container {
             display: flex;
@@ -83,7 +83,7 @@
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
-        #copy-button {
+        .icon-button {
             background: none;
             border: none;
             cursor: pointer;
@@ -93,13 +93,24 @@
             align-items: center;
             justify-content: center;
         }
-        #copy-button:hover {
+        .icon-button:hover {
             background-color: #e0e0e0;
         }
-        #copy-button svg {
+        .icon-button svg {
             width: 20px;
             height: 20px;
             fill: #555;
+        }
+        #copySampleBtn {
+            gap: 8px;
+            border: 1px solid #ddd;
+            padding: 4px 10px;
+            color: #555;
+            font-size: 14px;
+        }
+        #copySampleBtn svg {
+            width: 16px;
+            height: 16px;
         }
         #outputPreview {
             border: 1px solid #ccc;
@@ -127,14 +138,12 @@
         #outputPreview tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-
         .page-footer {
             width: 100%;
-            color: rgb(37, 36, 36);
+            color: #2c3e50;
             text-align: center;
             padding: 20px 0;
             font-size: 14px;
-            /* Margin-top tidak lagi diperlukan karena container sudah punya margin-bottom */
         }
     </style>
 </head>
@@ -142,43 +151,79 @@
 
     <div class="container">
         <h1>Task Converter (Text to Google Sheets)</h1>
-
         <div class="instructions">
             <strong>Cara Penggunaan:</strong>
             <ol>
-                <li>Tempel laporan harian Anda ke dalam "Input Text".</li>
+                <li>Tempel laporan harian Anda atau klik <strong>"Sample text"</strong> untuk menyalin contoh format.</li>
                 <li>Klik "Convert". Anda akan melihat hasil dalam format tabel di bawah.</li>
                 <li>Klik ikon <strong>Copy</strong> (di sebelah kanan judul "Preview") untuk menyalin data ke clipboard.</li>
                 <li>Tempel ke Google Sheets.</li>
             </ol>
         </div>
-
-        <h2>Input Text</h2>
+        <div class="area-header">
+            <h2>Input Text</h2>
+            <button id="copySampleBtn" class="icon-button" title="Copy sample text to clipboard">
+                <span id="sampleBtnText">Sample text</span>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </button>
+        </div>
         <textarea id="inputText" placeholder="Tempel teks laporan harian di sini..."></textarea>
-
         <button id="convertBtn">Convert</button>
-        
-        <div class="output-header">
+        <div class="area-header output-header">
             <h2>Preview</h2>
             <div class="copy-container">
                 <span id="copy-feedback">Copied!</span>
-                <button id="copy-button" title="Copy for Google Sheets">
+                <button id="copy-button" class="icon-button" title="Copy for Google Sheets">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                 </button>
             </div>
         </div>
-        <div id="outputPreview">
-            <!-- Tabel HTML akan disuntikkan di sini oleh JavaScript -->
-        </div>
-
+        <div id="outputPreview"></div>
     </div>
-
     <footer class="page-footer">
         Dibuat oleh Fahrudin
     </footer>
 
     <script>
-        // Kode JavaScript tetap sama persis
+        // --- PERUBAHAN UTAMA DI SINI ---
+        let sampleTextContent = ''; // Variabel untuk menyimpan teks sampel
+
+        // Memuat teks sampel saat halaman selesai dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('sample.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    sampleTextContent = text.trim(); // Simpan teks ke variabel
+                })
+                .catch(error => {
+                    console.error('Gagal memuat file sample.txt:', error);
+                    sampleTextContent = 'Gagal memuat teks sampel. Pastikan file sample.txt ada di folder yang sama.';
+                });
+        });
+
+        // Event listener untuk tombol copy sampel
+        document.getElementById('copySampleBtn').addEventListener('click', () => {
+            if (!sampleTextContent) {
+                alert('Teks sampel belum selesai dimuat. Coba lagi sesaat.');
+                return;
+            }
+            navigator.clipboard.writeText(sampleTextContent).then(() => {
+                const sampleBtnText = document.getElementById('sampleBtnText');
+                sampleBtnText.textContent = 'Copied!';
+                setTimeout(() => {
+                    sampleBtnText.textContent = 'Sample text';
+                }, 2000);
+            }).catch(err => {
+                alert('Gagal menyalin teks sampel: ', err);
+            });
+        });
+
+        // --- SISA KODE JAVASCRIPT TETAP SAMA ---
         const monthMap = { 'januari':'01', 'februari':'02', 'maret':'03', 'april':'04', 'mei':'05', 'juni':'06', 'juli':'07', 'agustus':'08', 'september':'09', 'oktober':'10', 'november':'11', 'desember':'12' };
         let tsvForCopy = '';
 
